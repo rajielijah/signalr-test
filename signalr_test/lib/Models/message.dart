@@ -1,7 +1,7 @@
 class Message {
-  String name;
+  String? name;
   String message;
   bool isMine = false;
 
-  Message({required this.name, required this.message, this.isMine = false});
+  Message({this.name, required this.message, this.isMine = false});
 }

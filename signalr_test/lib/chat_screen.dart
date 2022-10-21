@@ -18,12 +18,31 @@ class _ChatScreenState extends State<ChatScreen> {
   SignalRHelper signalR = SignalRHelper();
 
   receiveMessageHandler(args) {
+    // signalR.messageList.add(Message(
+    //     name: args[0], message: args[1], isMine: args[0] == widget.name));
+    // scrollController.jumpTo(scrollController.position.maxScrollExtent + 75);
+    // setState(() {
+    //
+    // });
     signalR.messageList.add(Message(
-        name: args[0], message: args[1], isMine: args[0] == widget.name));
+        message: args[0], isMine: false ));
     scrollController.jumpTo(scrollController.position.maxScrollExtent + 75);
-    setState(() {});
+
+    setState(() {
+      print("jahb $args");
+      signalR.messageList;
+    });
   }
 
+  receiveMessage(result, fromUserId) {
+    if(fromUserId == this)
+    signalR.messageList.add(Message(
+        message: result, isMine: false ));
+    scrollController.jumpTo(scrollController.position.maxScrollExtent + 75);
+    setState(() {
+      signalR.messageList;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,12 +56,12 @@ class _ChatScreenState extends State<ChatScreen> {
               controller: scrollController,
               itemCount: signalR.messageList.length,
               itemBuilder: (context, i) {
+                print(signalR.messageList[i].message);
                 return ListTile(
                   title: Text(
                     signalR.messageList[i].isMine
                         ? signalR.messageList[i].message
-                        : signalR.messageList[i].name +
-                            ': ' +
+                        : signalR.messageList[i].name ?? "" ': ' +
                             signalR.messageList[i].message,
                     textAlign: signalR.messageList[i].isMine
                         ? TextAlign.end
@@ -71,7 +90,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     onPressed: () async {
                       await signalR.restartIfNeedIt();
-                      signalR.sendMessage(widget.name, txtController.text);
+                      signalR.sendMessage(txtController.text, 30365);
+                      setState((){
+                        signalR.messageList;
+                      });
                       txtController.clear();
                       scrollController.jumpTo(
                           scrollController.position.maxScrollExtent + 75);

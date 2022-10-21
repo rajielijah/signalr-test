@@ -1,37 +1,48 @@
 import 'dart:developer';
-
+import 'dart:io';
+import 'package:http/io_client.dart';
 import 'package:signalr_core/signalr_core.dart';
 
 import 'Models/message.dart';
 
 class SignalRHelper {
-  final url = 'https://84af-39-34-184-179.ap.ngrok.io/chatHub';
+  final url = 'https://onecareinnovastrachat.azurewebsites.net/chathub';
   HubConnection? hubConnection;
   var messageList = <Message>[];
   String textMessage = '';
-
-  Future<void> connect(receiveMessageHandler) async {
+  int? toUserId;
+  Future<void> connect(receiveMessageHandler, int? fromUserIds) async {
     try {
       hubConnection = HubConnectionBuilder()
           .withAutomaticReconnect(1000)
-          .withUrl(url)
+          .withUrl(url, HttpConnectionOptions(
+        client: IOClient(HttpClient()..badCertificateCallback = (x, y, z) => true),
+        logging: (level, message) => print(message),))
           .build();
       hubConnection?.onclose((error) {
         log('Connection Close');
       });
-      hubConnection?.on('ReceiveMessage', receiveMessageHandler);
+      int fromUserId = 30358;
+      hubConnection?.on('ReceiveMessage', ([textMessage, fromUserId]) => {
+          if(fromUserIds == toUserId) {
+          messageList.add(Message(
+            message: textMessage.toString(),
+            isMine: false))
+          }
+      });
+      log("we gottan test $receiveMessageHandler");
       await _start();
     } catch (e) {
       log("SignalR " + e.toString());
     }
   }
 
-  void sendMessage(String name, String message) {
-    hubConnection?.invoke('SendMessage', args: [name, message]);
-    // messageList.add(Message(
-    //     name: name,
-    //     message: message,
-    //     isMine: true));
+  void sendMessage(String message, int fromUserId,) {
+    hubConnection?.invoke('SendMessage', args: [message, fromUserId, 30358]);
+    messageList.add(Message(
+        message: message,
+        isMine: true));
+    log(fromUserId.toString());
     textMessage = '';
   }
 
